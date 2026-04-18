@@ -5,6 +5,7 @@
 
 #define TXFF_MASK (0x00000001 << 5)
 #define FEN_MASK (0x00000001 << 4)
+#define RXFE_MASK (0x00000001 << 4)
 
 typedef struct{
     volatile uint32_t UART_DR;          // 0x000 Data Register
@@ -14,7 +15,7 @@ typedef struct{
     volatile uint32_t RESERVED1;        // occupy byte
     volatile uint32_t UART_ILPR;        // 0x020 low-power counter register
     volatile uint32_t UART_IBRD;        // 0x024 integer baud rate
-    volatile uint32_t UARTFBRD;         // 0x028 fractional baud rate
+    volatile uint32_t UART_FBRD;         // 0x028 fractional baud rate
     volatile uint32_t UART_LCR_H;       // 0x02c line control register
     volatile uint32_t UART_CR;          // 0x030 Control Register
     volatile uint32_t UART_IFLS;        // 0x034 interrupt FIFO
