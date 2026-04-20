@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "uart.h"
+#include "rp2350_uart_driver.h"
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
 #include "pico/stdlib.h"
@@ -16,24 +16,6 @@ int UART_receiveBytes(UART_t *port, uint8_t *receiveBuffer, uint32_t *receiveBuf
 void UART_writeBitFIFO(UART_t *port, bool enable);
 void UART_writeBitCR(UART_t *port, bool enable);
 // -----------------------------------------------------------
-
-
-// example transmission
-int main() {
-    int bufSize = 100;
-    uint8_t receiveBuffer[bufSize];
-    uint32_t receiveBufferIndex = 0;
-
-    UART_init(UART0, RESETS, 115200);
-    
-    for (volatile int i = 0; i < 100000; i++);  // small delay
-   
-    uint8_t string[] = "hello aidan\n";
-    while(1) {
-        UART_transmitBytes(UART0, string, sizeof(string) - 1);
-        for (volatile int i = 0; i < 500000; i++) { ; }
-    }
-}
 
 // basically made simpler version of uart_init from pg.972 on rp2350 documentation
 void UART_init(UART_t *port, RESETS_t *resets, uint32_t baudRate) {
@@ -73,7 +55,8 @@ void UART_init(UART_t *port, RESETS_t *resets, uint32_t baudRate) {
 
 // Sets baudRate
 void UART_setBaudRate(UART_t *port, uint32_t baudRate) {
-    uint32_t baud_rate_div = (8 * clock_get_hz(UART_CLOCK_NUM(port)) / baudRate) + 1;
+    // This still have few things to look into, (clk_peri)
+    uint32_t baud_rate_div = (8 * clock_get_hz(clk_peri) / baudRate) + 1;
     uint32_t baud_ibrd = baud_rate_div >> 7;
     uint32_t baud_fbrd;
 

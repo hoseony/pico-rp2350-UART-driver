@@ -1,10 +1,9 @@
-#ifndef UART_DRIVER_H
-#define UART_DRIVER_H
+#ifndef RP2350_UART_DRIVER_H
+#define RP2350_UART_DRIVER_H
 
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "uart.h"
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
 #include "pico/stdlib.h"
@@ -18,7 +17,7 @@
 #define UART_CR_TXE_MASK (0x00000001u << 8) // transmit bit (1 to transmit)
 #define UART_CR_EN_MASK (0x00000001u << 0) // enable UART (1 to enable)
 
-// ------------------List of Registers (UART) ---------------------
+// ------------------ List of Registers (UART) ---------------------
 typedef struct {
     volatile uint32_t UART_DR;          // 0x000 Data Register
     volatile uint32_t UART_SR;          // 0x004 Recieve Status Register (error message)
@@ -76,5 +75,16 @@ typedef struct {
 
 #define GPIO0 ((GPIO_CTRL_PAIR_t *)(BANK_IO_BASE))
 #define GPIO1 ((GPIO_CTRL_PAIR_t *)(BANK_IO_BASE + 0x008))
+
+
+// --------------- function prototypes -----------------------
+void UART_transmitByte(UART_t *port, uint8_t byte);
+void UART_init(UART_t *port, RESETS_t *resets, uint32_t baudRate);
+void UART_setBaudRate(UART_t *port, uint32_t baudRate);
+void UART_transmitBytes(UART_t *port, uint8_t *byte, size_t length);
+int UART_receiveByte(UART_t *port, uint8_t *receiveBuffer, uint32_t *receiveBufferIndex, uint32_t receiveBufferSize);
+int UART_receiveBytes(UART_t *port, uint8_t *receiveBuffer, uint32_t *receiveBufferIndex, uint32_t receiveBufferSize);
+void UART_writeBitFIFO(UART_t *port, bool enable);
+void UART_writeBitCR(UART_t *port, bool enable);
 
 #endif
