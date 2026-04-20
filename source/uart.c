@@ -2,12 +2,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "uart.h"
-// #include "hardware/clocks.h"
+#include "hardware/clocks.h"
+#include "hardware/gpio.h"
+#include "pico/stdlib.h"
 
 // --------------- function prototypes -----------------------
 void UART_transmitByte(UART_t *port, uint8_t byte);
 void UART_init(UART_t *port, RESETS_t *resets, uint32_t baudRate);
-void UART_setBaudRate(UART_t *port, uint32_t UART_clk_hz, uint32_t baudRate);
+void UART_setBaudRate(UART_t *port, uint32_t baudRate);
 void UART_transmitBytes(UART_t *port, uint8_t *byte, size_t length);
 int UART_receiveByte(UART_t *port, uint8_t *receiveBuffer, uint32_t *receiveBufferIndex, uint32_t receiveBufferSize);
 int UART_receiveBytes(UART_t *port, uint8_t *receiveBuffer, uint32_t *receiveBufferIndex, uint32_t receiveBufferSize);
@@ -15,6 +17,8 @@ void UART_writeBitFIFO(UART_t *port, bool enable);
 void UART_writeBitCR(UART_t *port, bool enable);
 // -----------------------------------------------------------
 
+
+// example transmission
 int main() {
     int bufSize = 100;
     uint8_t receiveBuffer[bufSize];
@@ -24,55 +28,52 @@ int main() {
     
     for (volatile int i = 0; i < 100000; i++);  // small delay
    
-    uint8_t string[] = "hello aidan";
+    uint8_t string[] = "hello aidan\n";
     while(1) {
         UART_transmitBytes(UART0, string, sizeof(string) - 1);
-    }
-}
-
-// write byte to Data Register
-void UART_transmitByte(UART_t *port, uint8_t byte) {
-    while (1) {
-        if ( !(port->UART_FR & UART_FR_TXFF_MASK) ) {
-            port->UART_DR = byte;
-            break;
-        }
+        for (volatile int i = 0; i < 500000; i++) { ; }
     }
 }
 
 // basically made simpler version of uart_init from pg.972 on rp2350 documentation
 void UART_init(UART_t *port, RESETS_t *resets, uint32_t baudRate) {
-    // initialize the memory address
-    GPIO_t *gpio = (GPIO_t *)BANK_IO_BASE;
- 
     if (port == NULL || resets == NULL) {
         return;
     }
 
-    // disable bits
-    UART_writeBitCR(port, 0);
-
     // make UART0 to 0, (using UART)
-    resets->RESET &= ~(RESET_UART0_MASK); // make UART0 to 0
+    resets->RESET |= RESET_UART0_MASK;
+    resets->RESET &= ~(RESET_UART0_MASK);
 
     while( !(resets->RESET_DONE & RESET_UART0_MASK)) {
-        ; // I am waiting for it to be reset
+        ; // waiting for it to be reset
     }
-   
-    gpio->GPIO0_CTRL = GPIO_UART_FUNCT;
-    gpio->GPIO1_CTRL = GPIO_UART_FUNCT;
 
-    UART_setBaudRate(port, 48000000u, baudRate);
+    // reset CR register
+    port->UART_CR = 0;
+
+    gpio_set_function(0, GPIO_FUNC_UART);
+    gpio_set_function(1, GPIO_FUNC_UART);
+   
+    // I actually don't know why this not work (will going to figure out eventually)
+    // GPIO0->CTRL = GPIO_UART_FUNCT;
+    // GPIO1->CTRL = GPIO_UART_FUNCT;
+
+    port->UART_LCR_H = 0;
+
+    // set a baudRate, Enable FIFO
+    UART_setBaudRate(port, baudRate);
     UART_writeBitFIFO(port, 1);
 
-    port->UART_LCR_H &= ~(0x3u << 5); // clear stuff
-    port->UART_LCR_H |= (0x3u << 5); // setting the word length to be 8 ('b11 = 0x3u)
+    // setting the word length to be 8 ('b11 = 0x3u)
+    port->UART_LCR_H |= (0x3u << 5); 
 
     UART_writeBitCR(port, 1);
 }
 
-void UART_setBaudRate(UART_t *port, uint32_t UART_clk_hz, uint32_t baudRate) {
-    uint32_t baud_rate_div = (8 * UART_clk_hz / baudRate) + 1;
+// Sets baudRate
+void UART_setBaudRate(UART_t *port, uint32_t baudRate) {
+    uint32_t baud_rate_div = (8 * clock_get_hz(UART_CLOCK_NUM(port)) / baudRate) + 1;
     uint32_t baud_ibrd = baud_rate_div >> 7;
     uint32_t baud_fbrd;
 
@@ -88,9 +89,16 @@ void UART_setBaudRate(UART_t *port, uint32_t UART_clk_hz, uint32_t baudRate) {
 
     port->UART_IBRD = baud_ibrd;
     port->UART_FBRD = baud_fbrd; 
+}
 
-    port->UART_IBRD = 26;
-    port->UART_FBRD = 3;
+// write byte to Data Register
+void UART_transmitByte(UART_t *port, uint8_t byte) {
+    while (1) {
+        if ( !(port->UART_FR & UART_FR_TXFF_MASK) ) {
+            port->UART_DR = byte;
+            break;
+        }
+    }
 }
 
 // write bytes to Data Register

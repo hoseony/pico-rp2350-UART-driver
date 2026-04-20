@@ -1,22 +1,24 @@
 #ifndef UART_DRIVER_H
 #define UART_DRIVER_H
 
+#include <stdio.h>
 #include <stdint.h>
+#include <stdbool.h>
+#include "uart.h"
+#include "hardware/clocks.h"
+#include "hardware/gpio.h"
+#include "pico/stdlib.h"
 
+// ------------------ MASKS ---------------------
 #define UART_FR_TXFF_MASK (0x00000001u << 5)
 #define UART_FR_RXFE_MASK (0x00000001u << 4)
 #define UART_LCR_H_FEN_MASK (0x00000001u << 4)
-
-#define UART0_BASE 0x40070000u
-#define UART1_BASE 0x40078000u
-
-#define UART0 ((UART_t *)UART0_BASE)
-#define UART1 ((UART_t *)UART1_BASE)
 
 #define UART_CR_RXE_MASK (0x00000001u << 9) // receive bit (1 to receive)
 #define UART_CR_TXE_MASK (0x00000001u << 8) // transmit bit (1 to transmit)
 #define UART_CR_EN_MASK (0x00000001u << 0) // enable UART (1 to enable)
 
+// ------------------List of Registers (UART) ---------------------
 typedef struct {
     volatile uint32_t UART_DR;          // 0x000 Data Register
     volatile uint32_t UART_SR;          // 0x004 Recieve Status Register (error message)
@@ -34,7 +36,8 @@ typedef struct {
     volatile uint32_t UART_MIS;         // 0x040 Masked Interrupt status register
     volatile uint32_t UART_ICR;         // 0x044 Interrupt clear register
     volatile uint32_t UART_DMACR;       // 0x048 DMA control Register
-/*    volatile uint32_t UART_PERIPHID0;   // peripherals
+/*  I am not using these part for now
+    volatile uint32_t UART_PERIPHID0;   // peripherals
     volatile uint32_t UART_PERIPHID1;
     volatile uint32_t UART_PERIPHID2;
     volatile uint32_t UART_PERIPHID3;
@@ -44,7 +47,13 @@ typedef struct {
     volatile uint32_t UART_PCELLID3;*/
 } UART_t;
 
+#define UART0_BASE 0x40070000u
+#define UART1_BASE 0x40078000u
 
+#define UART0 ((UART_t *)UART0_BASE)
+#define UART1 ((UART_t *)UART1_BASE)
+
+// ------------------RESET ---------------------
 #define RESET_UART0_MASK (0x00000001u << 26)
 #define RESET_UART1_MASK (0x00000001u << 27)
 #define RESET_BASE 0x40020000u
@@ -56,16 +65,16 @@ typedef struct {
     volatile uint32_t RESET_DONE;
 } RESETS_t;
 
-// ------------------------------
-
+// ------------------GPIO ---------------------
 #define GPIO_UART_FUNCT 2 
 #define BANK_IO_BASE 0x40028000u
 
 typedef struct {
-    volatile uint32_t GPIO0_STATUS; //0x40028000
-    volatile uint32_t GPIO0_CTRL;
-    volatile uint32_t GPIO1_STATUS;
-    volatile uint32_t GPIO1_CTRL;
-} GPIO_t;
+    volatile uint32_t STATUS; //0x40028000
+    volatile uint32_t CTRL;
+} GPIO_CTRL_PAIR_t;
+
+#define GPIO0 ((GPIO_CTRL_PAIR_t *)(BANK_IO_BASE))
+#define GPIO1 ((GPIO_CTRL_PAIR_t *)(BANK_IO_BASE + 0x008))
 
 #endif

@@ -16,8 +16,11 @@ add_executable(pico-rp2350-uart)
 
 target_link_libraries(pico-rp2350-uart
     pico_stdlib
-    hardware_clocks)
+    hardware_clocks
+    hardware_gpio)
 
 target_sources(pico-rp2350-uart PRIVATE uart.c)
 
+pico_enable_stdio_uart(pico-rp2350-uart 0)
+pico_enable_stdio_usb(pico-rp2350-uart 0)
 pico_add_extra_outputs(pico-rp2350-uart)
