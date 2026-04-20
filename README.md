@@ -1,5 +1,12 @@
 # pico-rp2350-UART-driver
-Bare-metal UART driver for rp2350.
+Bare-metal UART driver for rp2350 (Raspberry Pi Pico 2). 
+
+## Buliding
+```bash
+mkdir build && cd build
+cmake ../source
+make -j4
+```
 
 ---
 - [RP2350 datasheet](https://pip-assets.raspberrypi.com/categories/1214-rp2350/documents/RP-008373-DS-2-rp2350-datasheet.pdf?disposition=inline)
