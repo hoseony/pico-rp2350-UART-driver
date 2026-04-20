@@ -15,6 +15,9 @@ pico_sdk_init()
 add_executable(pico-rp2350-uart)
 
 target_link_libraries(pico-rp2350-uart
-    pico_stdlib)
+    pico_stdlib
+    hardware_clocks)
 
 target_sources(pico-rp2350-uart PRIVATE uart.c)
+
+pico_add_extra_outputs(pico-rp2350-uart)
