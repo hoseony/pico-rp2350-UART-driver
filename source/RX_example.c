@@ -24,6 +24,7 @@ int main(void) {
         UART_receiveBytes(UART0, rxBuf, &rxIdx, sizeof(rxBuf));
         if (rxIdx > 0) { // when it actually received something
             printf("%.*s", rxIdx, rxBuf);
+            UART_transmitBytes(UART0, rxBuf, rxIdx);
             rxIdx = 0;
         }
     }

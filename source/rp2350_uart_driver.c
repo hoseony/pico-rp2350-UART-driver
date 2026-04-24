@@ -56,7 +56,7 @@ void UART_init(UART_t *port, RESETS_t *resets, uint32_t baudRate) {
 // Sets baudRate
 void UART_setBaudRate(UART_t *port, uint32_t baudRate) {
     // This still have few things to look into, (clk_peri)
-    uint32_t baud_rate_div = (8 * clock_get_hz(clk_peri) / baudRate) + 1;
+    uint32_t baud_rate_div = (8 * clock_get_hz(UART_CLOCK_NUM(port)) / baudRate) + 1;
     uint32_t baud_ibrd = baud_rate_div >> 7;
     uint32_t baud_fbrd;
 
@@ -72,6 +72,8 @@ void UART_setBaudRate(UART_t *port, uint32_t baudRate) {
 
     port->UART_IBRD = baud_ibrd;
     port->UART_FBRD = baud_fbrd; 
+
+    port->UART_LCR_H = port->UART_LCR_H;
 }
 
 // write byte to Data Register
